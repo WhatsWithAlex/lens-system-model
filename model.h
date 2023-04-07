@@ -37,7 +37,6 @@ public:
     friend std::ostream &operator<<(std::ostream &ostr, const Image &image);
 
     ImageType get_type() const;
-    // void fromLightRays(std::vector<LightRay> in_rays);
 };
 
 class Lens

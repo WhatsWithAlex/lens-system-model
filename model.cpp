@@ -54,16 +54,15 @@ Image Lens::calculateImage(const Object &in_object) const
     const float image_size = std::abs(size_scale) * in_object.get_size();
     ObjectOrientation image_orienatation;
     ImageType image_type;
-    if (size_scale * distance_to_object < 0)
-    {
+    if (size_scale < 0)
         image_orienatation = getOppositeOrientation(in_object.get_orientation());
-        image_type = ImageType::real;
-    }
     else
-    {
         image_orienatation = in_object.get_orientation();
+
+    if (size_scale * distance_to_object < 0)
+        image_type = ImageType::real;
+    else
         image_type = ImageType::imaginary;
-    }
 
     return Image(image_x_coordinate, image_size, image_orienatation, image_type);
 }
