@@ -1,5 +1,5 @@
-#include "utils.h"
 
+#include "utils.h"
 
 ObjectOrientation getOppositeOrientation(ObjectOrientation orientation) 
 {

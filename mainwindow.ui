@@ -511,6 +511,9 @@
            </item>
            <item>
             <widget class="QLineEdit" name="lensesSettingR1Input">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="font">
               <font>
                <family>Consolas</family>

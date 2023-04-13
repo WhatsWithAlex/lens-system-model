@@ -1,12 +1,18 @@
-#pragma once
 
-#include <iostream>
+#ifndef MODEL_H
+#define MODEL_H
+
+#include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "utils.h"
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
-#include "utils.h"
+#include <iostream>
+
+extern const unsigned int max_lens_system_size;
+extern const float lens_refractive_index;
 
 class Object
 {
@@ -34,8 +40,6 @@ public:
     Image();
     Image(float x_coordinate, float size, ObjectOrientation orientation, ImageType type);
 
-    friend std::ostream &operator<<(std::ostream &ostr, const Image &image);
-
     ImageType get_type() const;
 };
 
@@ -47,6 +51,7 @@ class Lens
 
 public:
     Lens(float x_coordinate = 0.0f, float focal_length = 0.0f, bool is_active = false);
+    Lens(float x_coordinate, float r1, float r2, bool is_active);
 
     // LightRay calculateLightRay(LightRay in_ray);
 
@@ -55,6 +60,8 @@ public:
     float get_x_coordinate() const;
     float get_focal_length() const;
     bool is_active() const;
+
+    static float calculateFocalLen(float r1, float r2);
 };
 
 class LensSystemModel
@@ -86,3 +93,5 @@ public:
 
 //     Point2D getIntersection(LightRay ray);
 // };
+
+#endif // MODEL_H
