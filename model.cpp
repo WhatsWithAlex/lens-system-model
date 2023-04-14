@@ -1,5 +1,6 @@
 
 #include "model.h"
+#include <limits.h>
 
 const unsigned int max_lens_system_size = 5;
 extern const float lens_refractive_index = 1.5f;
@@ -54,13 +55,17 @@ Lens::Lens(float x_coordinate, float r1, float r2, bool is_active)
 
 Image Lens::calculateImage(const Object &in_object) const
 {
-    const float distance_to_object = x_coordinate - in_object.get_x_coordinate();
-    const float distance_to_image =
-        focal_length * distance_to_object / (distance_to_object - focal_length);
+    float distance_to_object = x_coordinate - in_object.get_x_coordinate();
+    float distance_to_image;
+
+    if (distance_to_object == std::abs(focal_length))
+        distance_to_image = std::numeric_limits<float>::infinity();
+    else
+        distance_to_image = focal_length * distance_to_object / (distance_to_object - focal_length);
     const float size_scale = -(distance_to_image / distance_to_object);
 
     float image_x_coordinate = x_coordinate + distance_to_image;
-    const float image_size = std::abs(size_scale) * in_object.get_size();
+    float image_size = std::abs(size_scale) * in_object.get_size();
     ObjectOrientation image_orienatation;
     ImageType image_type;
 
@@ -104,6 +109,9 @@ void LensSystemModel::calculate()
         if (!current_lens.is_active())
             continue;
 
+        if (current_lens.get_x_coordinate() <= object.get_x_coordinate())
+            continue;
+
         current_image = current_lens.calculateImage(*current_object);
         current_object = &current_image;
     }
@@ -123,3 +131,11 @@ Lens LensSystemModel::getLens(int lens_index)
 Image LensSystemModel::get_image() const { return image; }
 
 void LensSystemModel::set_object(const Object &new_object) { object = new_object; }
+
+//      ObjectOrientation       //
+ObjectOrientation getOppositeOrientation(ObjectOrientation orientation)
+{
+    return orientation == ObjectOrientation::up
+        ? ObjectOrientation::down
+        : ObjectOrientation::up;
+}

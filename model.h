@@ -6,13 +6,20 @@
 #include <string>
 #include <vector>
 
-#include "utils.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 
 extern const unsigned int max_lens_system_size;
 extern const float lens_refractive_index;
+
+enum class ObjectOrientation
+{
+    up,
+    down
+};
+
+ObjectOrientation getOppositeOrientation(ObjectOrientation orientation);
 
 class Object
 {
@@ -30,6 +37,12 @@ public:
     float get_x_coordinate() const;
     float get_size() const;
     ObjectOrientation get_orientation() const;
+};
+
+enum class ImageType
+{
+    real,
+    imaginary
 };
 
 class Image : public Object
@@ -82,16 +95,5 @@ public:
     Image get_image() const;
     void set_object(const Object &new_object);
 };
-
-// class LightRay
-// {
-// public:
-//     Point2D point1;
-//     Point2D point2;
-
-//     LightRay(Point2D point1, Point2D point2);
-
-//     Point2D getIntersection(LightRay ray);
-// };
 
 #endif // MODEL_H

@@ -6,13 +6,24 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QGraphicsLineItem>
 #include <QList>
 #include "model.h"
-#include "utils.h"
+#include "graphicsarrow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+struct LensState
+{
+    float x = 0.0f;
+    float focal_length = 0.0f;
+    float r1 = 0.0f;
+    float r2 = 0.0f;
+    bool is_active = false;
+    bool is_focal_length_set = true;
+};
 
 class MainWindow : public QMainWindow
 
@@ -40,6 +51,8 @@ private:
     int prev_lens_index = 0;
     QList<LensState> lenses_states;
     QGraphicsScene *scene;
+    QPoint scene_center = QPoint(400, 250);
+    QList<QGraphicsItem *> scene_items;
 
     void saveLensState(int index);
     void showLensState(int index);
@@ -47,6 +60,13 @@ private:
     void showImageStats(Image image);
     void saveSettingsToFile();
     void openSettingsFromFile();
+
+    void drawObject(float x, float size, ObjectOrientation orientation, QColor color = Qt::black);
+    void drawLens(int idx, float x, float focal_length);
+    void drawScene();
+    void clearScene();
 };
+
+
 
 #endif // MAINWINDOW_H

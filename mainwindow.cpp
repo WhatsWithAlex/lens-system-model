@@ -9,7 +9,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -25,12 +24,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lensesSelectComboBox->setCurrentIndex(0);
 
     // initialize scene and graphics view
-    scene = new QGraphicsScene(0, 0, 800, 500, this);
+    scene = new QGraphicsScene(0, 0, 799, 499, this);
     ui->graphicsView->setScene(scene);
+    scene->addLine(0, 250, 800, 250);
+    scene->addLine(400, 0, 400, 500);
 }
 
 MainWindow::~MainWindow()
 {
+    clearScene();
     delete scene;
     delete ui;
 }
@@ -78,6 +80,7 @@ void MainWindow::on_menuCalculateButton_clicked()
     Image result_image = model.get_image();
 
     showImageStats(result_image);
+    drawScene();
 }
 
 void MainWindow::on_lensesSelectComboBox_currentIndexChanged(int index)
@@ -121,38 +124,44 @@ void MainWindow::on_menuSaveButton_clicked()
 
 void MainWindow::on_menuSaveAsButton_clicked()
 {
-    save_file_path = QFileDialog::getSaveFileName(
+    QString new_save_file_path = QFileDialog::getSaveFileName(
         this,
         tr("Сохранить эксперимент"),
         "",
         tr("JSON (*.json)")
     );
+    if (new_save_file_path != "") {
+        save_file_path = new_save_file_path;
 
-    QStringList pieces = save_file_path.split("/");
-    QString filename = pieces.value(pieces.length() - 1);
-    ui->menuSaveFileNameLabel->setText(filename);
+        QStringList pieces = save_file_path.split("/");
+        QString filename = pieces.value(pieces.length() - 1);
+        ui->menuSaveFileNameLabel->setText(filename);
 
-    int current_lens_index = ui->lensesSelectComboBox->currentIndex();
-    saveLensState(current_lens_index);
-    saveSettingsToFile();
+        int current_lens_index = ui->lensesSelectComboBox->currentIndex();
+        saveLensState(current_lens_index);
+        saveSettingsToFile();
+    }
 }
 
 void MainWindow::on_menuOpenButton_clicked()
 {
-    save_file_path = QFileDialog::getOpenFileName(
+    QString new_save_file_path = QFileDialog::getOpenFileName(
         this,
         tr("Открыть файл эксперимента"),
         "",
         tr("JSON (*.json)")
     );
+    if (new_save_file_path != "") {
+        save_file_path = new_save_file_path;
 
-    QStringList pieces = save_file_path.split("/");
-    QString filename = pieces.value(pieces.length() - 1);
-    ui->menuSaveFileNameLabel->setText(filename);
+        QStringList pieces = save_file_path.split("/");
+        QString filename = pieces.value(pieces.length() - 1);
+        ui->menuSaveFileNameLabel->setText(filename);
 
-    openSettingsFromFile();
-    int current_lens_index = ui->lensesSelectComboBox->currentIndex();
-    showLensState(current_lens_index);
+        openSettingsFromFile();
+        int current_lens_index = ui->lensesSelectComboBox->currentIndex();
+        showLensState(current_lens_index);
+    }
 }
 
 //          Methods         //
@@ -324,4 +333,104 @@ void MainWindow::openSettingsFromFile()
             ++i;
         }
     }
+}
+
+void MainWindow::drawObject(float x, float size, ObjectOrientation orientation, QColor color)
+{
+    if (orientation == ObjectOrientation::up)
+        size = -size;
+
+    QPoint from(scene_center.x() + x, scene_center.y());
+    QPoint to(scene_center.x() + x, scene_center.y() + size);
+    GraphicsArrow *object_arrow = new GraphicsArrow(from, to, color);
+    scene_items.append(object_arrow);
+    scene->addItem(object_arrow);
+}
+
+void MainWindow::drawLens(int idx, float x, float focal_length)
+{
+    ArrowType arrow_type;
+    QColor lens_color;
+    if (focal_length < 0) {
+        arrow_type = ArrowType::reversed;
+        lens_color = Qt::black;
+    } else {
+        arrow_type = ArrowType::common;
+        lens_color = Qt::blue;
+    }
+
+    QPoint from(scene_center.x() + x, scene_center.y());
+
+    QPoint to1(scene_center.x() + x, scene_center.y() + 125.0f);
+    GraphicsArrow *lens_arrow1 = new GraphicsArrow(from, to1, lens_color, arrow_type);
+    scene_items.append(lens_arrow1);
+    scene->addItem(lens_arrow1);
+
+    QPoint to2(scene_center.x() + x, scene_center.y() - 125.0f);
+    GraphicsArrow *lens_arrow2 = new GraphicsArrow(from, to2, lens_color, arrow_type);
+    scene_items.append(lens_arrow2);
+    scene->addItem(lens_arrow2);
+
+    QGraphicsTextItem *lens_idx_text = new QGraphicsTextItem;
+    lens_idx_text->setPos(to2);
+    lens_idx_text->setPlainText(QString::number(idx));
+    scene_items.append(lens_idx_text);
+    scene->addItem(lens_idx_text);
+
+//    scene->addEllipse()
+}
+
+void MainWindow::drawScene()
+{
+    clearScene();
+
+    float object_x = ui->objectXInput->text().toFloat();
+    float object_size = ui->objectSizeInput->text().toFloat();
+    ObjectOrientation object_orientation;
+    if (ui->objectOrientationRBUp->isChecked())
+        object_orientation = ObjectOrientation::up;
+    else
+        object_orientation = ObjectOrientation::down;
+
+    drawObject(object_x, object_size, object_orientation);
+
+    float image_x = ui->imageStatsXOutput->text().toFloat();
+    float image_size = ui->imageStatsSizeOutput->text().toFloat();
+    ObjectOrientation image_orientation;
+    QColor image_color;
+    if (ui->imageStatsOrientationOutput->text() == "вверх")
+        image_orientation = ObjectOrientation::up;
+    else
+        image_orientation = ObjectOrientation::down;
+
+    if (ui->imageStatsTypeOutput->text() == "РЕАЛЬНОЕ")
+        image_color = QColor(0, 200, 0);
+    else
+        image_color = Qt::blue;
+
+    drawObject(image_x, image_size, image_orientation, image_color);
+
+    for (unsigned int i = 0; i < max_lens_system_size; ++i) {
+        if (!lenses_states[i].is_active)
+            continue;
+
+        float lens_x = lenses_states[i].x;
+        float lens_focal_len;
+        bool lens_is_focal_length_set = lenses_states[i].is_focal_length_set;
+
+        if (lens_is_focal_length_set)
+            lens_focal_len = lenses_states[i].focal_length;
+        else
+            lens_focal_len = Lens::calculateFocalLen(lenses_states[i].r1, lenses_states[i].r2);
+
+        drawLens(i, lens_x, lens_focal_len);
+    }
+}
+
+void MainWindow::clearScene()
+{
+    for (const QGraphicsItem *arrow_ptr : scene_items)
+        delete arrow_ptr;
+
+    scene_items.clear();
 }
