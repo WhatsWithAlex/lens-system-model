@@ -251,10 +251,13 @@
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>-10</y>
+      <y>10</y>
       <width>801</width>
-      <height>511</height>
+      <height>501</height>
      </rect>
+    </property>
+    <property name="dragMode">
+     <enum>QGraphicsView::ScrollHandDrag</enum>
     </property>
    </widget>
    <widget class="QWidget" name="lensesParameters" native="true">
@@ -657,7 +660,7 @@
       </font>
      </property>
      <property name="text">
-      <string>вверх</string>
+      <string>-</string>
      </property>
     </widget>
     <widget class="QLabel" name="imageStatsSizeOutput">
@@ -676,7 +679,7 @@
       </font>
      </property>
      <property name="text">
-      <string>60.0</string>
+      <string>-</string>
      </property>
     </widget>
     <widget class="QLabel" name="imageStatsXOutput">
@@ -695,7 +698,7 @@
       </font>
      </property>
      <property name="text">
-      <string>100.0</string>
+      <string>-</string>
      </property>
     </widget>
     <widget class="QLabel" name="imageStatsTypeLabel">
@@ -734,7 +737,7 @@
       </font>
      </property>
      <property name="text">
-      <string>РЕАЛЬНОЕ</string>
+      <string>-</string>
      </property>
     </widget>
    </widget>
@@ -898,7 +901,7 @@
       </font>
      </property>
      <property name="text">
-      <string>save1.txt</string>
+      <string>не открыт</string>
      </property>
     </widget>
    </widget>

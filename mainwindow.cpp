@@ -1,5 +1,10 @@
 
 #include <QString>
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonArray>
+#include <QJsonObject>
 #include "model.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -14,18 +19,23 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowFlags(Qt::Widget | Qt::MSWindowsFixedSizeDialogHint);
 
     // initialize lenses select combo box
-    for (int i = 1; i <= 5; ++i) {
+    for (unsigned int i = 1; i <= max_lens_system_size; ++i) {
         ui->lensesSelectComboBox->addItem(QString::number(i));
     }
     ui->lensesSelectComboBox->setCurrentIndex(0);
+
+    // initialize scene and graphics view
+    scene = new QGraphicsScene(0, 0, 800, 500, this);
+    ui->graphicsView->setScene(scene);
 }
 
 MainWindow::~MainWindow()
 {
+    delete scene;
     delete ui;
 }
 
-//          Signals         //
+//       Signal handlers        //
 void MainWindow::on_menuCalculateButton_clicked()
 {
     float object_x = ui->objectXInput->text().toFloat();
@@ -40,7 +50,7 @@ void MainWindow::on_menuCalculateButton_clicked()
     saveLensState(current_lens_index);
 
     model.set_object(Object(object_x, object_size, object_orientation));
-    for (int i = 0; i < 5; ++i)
+    for (unsigned int i = 0; i < max_lens_system_size; ++i)
     {
         if (lenses_states[i].is_focal_length_set) {
             model.setLens(
@@ -97,6 +107,51 @@ void MainWindow::on_lensesSettingR2Input_editingFinished()
     int current_lens_index = ui->lensesSelectComboBox->currentIndex();
     lenses_states[current_lens_index].r2 = ui->lensesSettingR2Input->text().toFloat();
     saveLensState(current_lens_index);
+    showLensState(current_lens_index);
+}
+
+void MainWindow::on_menuSaveButton_clicked()
+{
+    if (save_file_path != "") {
+        int current_lens_index = ui->lensesSelectComboBox->currentIndex();
+        saveLensState(current_lens_index);
+        saveSettingsToFile();
+    }
+}
+
+void MainWindow::on_menuSaveAsButton_clicked()
+{
+    save_file_path = QFileDialog::getSaveFileName(
+        this,
+        tr("Сохранить эксперимент"),
+        "",
+        tr("JSON (*.json)")
+    );
+
+    QStringList pieces = save_file_path.split("/");
+    QString filename = pieces.value(pieces.length() - 1);
+    ui->menuSaveFileNameLabel->setText(filename);
+
+    int current_lens_index = ui->lensesSelectComboBox->currentIndex();
+    saveLensState(current_lens_index);
+    saveSettingsToFile();
+}
+
+void MainWindow::on_menuOpenButton_clicked()
+{
+    save_file_path = QFileDialog::getOpenFileName(
+        this,
+        tr("Открыть файл эксперимента"),
+        "",
+        tr("JSON (*.json)")
+    );
+
+    QStringList pieces = save_file_path.split("/");
+    QString filename = pieces.value(pieces.length() - 1);
+    ui->menuSaveFileNameLabel->setText(filename);
+
+    openSettingsFromFile();
+    int current_lens_index = ui->lensesSelectComboBox->currentIndex();
     showLensState(current_lens_index);
 }
 
@@ -174,4 +229,99 @@ void MainWindow::showImageStats(Image image)
         ui->imageStatsTypeOutput->setText("МНИМОЕ");
 }
 
+void MainWindow::saveSettingsToFile()
+{
+    QJsonObject settings_json;
+    QFile file;
+    file.setFileName(save_file_path);
 
+    QJsonObject object_json;
+    object_json["x"] = ui->objectXInput->text().toFloat();
+    object_json["size"] = ui->objectSizeInput->text().toFloat();
+    if (ui->objectOrientationRBUp->isChecked())
+        object_json["orientation"] = "up";
+    else
+        object_json["orientation"] = "down";
+
+    QJsonArray lens_array;
+    for (unsigned int i = 0; i < max_lens_system_size; ++i) {
+        QJsonObject lens_json;
+        lens_json["x"] = lenses_states[i].x;
+        lens_json["focal_length"] = lenses_states[i].focal_length;
+        lens_json["r1"] = lenses_states[i].r1;
+        lens_json["r2"] = lenses_states[i].r2;
+        lens_json["is_active"] = lenses_states[i].is_active;
+        lens_json["is_focal_length_set"] = lenses_states[i].is_focal_length_set;
+        lens_array.append(lens_json);
+    }
+
+    settings_json["object"] = object_json;
+    settings_json["lenses"] = lens_array;
+
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    file.write(QJsonDocument(settings_json).toJson());
+    file.close();
+}
+
+void MainWindow::openSettingsFromFile()
+{
+    QString json_string;
+    QFile file;
+    file.setFileName(save_file_path);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    json_string = file.readAll();
+    file.close();
+
+    QJsonDocument settings_document = QJsonDocument::fromJson(json_string.toUtf8());
+    QJsonObject settings_json = settings_document.object();
+
+    if (settings_json.contains("object") && settings_json["object"].isObject()) {
+        QJsonObject object_json = settings_json["object"].toObject();
+
+        if (object_json.contains("x") && object_json["x"].isDouble())
+            ui->objectXInput->setText(QString::number(object_json["x"].toDouble()));
+
+        if (object_json.contains("size") && object_json["size"].isDouble())
+            ui->objectSizeInput->setText(QString::number(object_json["size"].toDouble()));
+
+        QString object_orientation;
+        if (object_json.contains("orientation") && object_json["orientation"].isString())
+            object_orientation = object_json["orientation"].toString();
+
+        if (object_orientation == "up")
+            ui->objectOrientationRBUp->setChecked(true);
+        else
+            ui->objectOrientationRBDown->setChecked(true);
+    }
+
+    if (settings_json.contains("lenses") && settings_json["lenses"].isArray()) {
+        QJsonArray lenses_array = settings_json["lenses"].toArray();
+        unsigned int i = 0;
+
+        for (const QJsonValue &v : lenses_array) {
+            if (i >= max_lens_system_size)
+                break;
+
+            QJsonObject lens_json = v.toObject();
+            if (lens_json.contains("x") && lens_json["x"].isDouble())
+                lenses_states[i].x = lens_json["x"].toDouble();
+
+            if (lens_json.contains("focal_length") && lens_json["focal_length"].isDouble())
+                lenses_states[i].focal_length = lens_json["focal_length"].toDouble();
+
+            if (lens_json.contains("r1") && lens_json["r1"].isDouble())
+                lenses_states[i].r1 = lens_json["r1"].toDouble();
+
+            if (lens_json.contains("r2") && lens_json["r2"].isDouble())
+                lenses_states[i].r2 = lens_json["r2"].toDouble();
+
+            if (lens_json.contains("is_active") && lens_json["is_active"].isBool())
+                lenses_states[i].is_active = lens_json["is_active"].toBool();
+
+            if (lens_json.contains("is_focal_length_set") && lens_json["is_focal_length_set"].isBool())
+                lenses_states[i].is_focal_length_set = lens_json["is_focal_length_set"].toBool();
+
+            ++i;
+        }
+    }
+}
