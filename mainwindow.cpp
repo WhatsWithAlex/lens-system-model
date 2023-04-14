@@ -373,7 +373,7 @@ void MainWindow::drawLens(int idx, float x, float focal_length)
 
     QGraphicsTextItem *lens_idx_text = new QGraphicsTextItem;
     lens_idx_text->setPos(to2);
-    lens_idx_text->setPlainText(QString::number(idx));
+    lens_idx_text->setPlainText(QString::number(idx + 1));
     scene_items.append(lens_idx_text);
     scene->addItem(lens_idx_text);
 
