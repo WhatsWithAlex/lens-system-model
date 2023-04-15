@@ -3,7 +3,6 @@
 #include <limits.h>
 
 const unsigned int max_lens_system_size = 5;
-extern const float lens_refractive_index = 1.5f;
 
 //          Object          //
 Object::Object()
@@ -36,21 +35,23 @@ Image::Image(float x_coordinate, float size, ObjectOrientation orientation, Imag
 ImageType Image::get_type() const { return type; }
 
 //          Lens            //
-float Lens::calculateFocalLen(float r1, float r2)
+float Lens::calculateFocalLen(float r1, float r2, float lens_refractive_index)
 {
     return (r1 * r2) / ((lens_refractive_index - 1.0f) * (r2 - r1));
 }
 
-Lens::Lens(float x_coordinate, float focal_length, bool is_active)
+Lens::Lens(float x_coordinate, float focal_length, bool is_active, float refractive_index)
     : x_coordinate(x_coordinate)
     , focal_length(focal_length)
+    , refractive_index(refractive_index)
     , active(is_active) {}
 
-Lens::Lens(float x_coordinate, float r1, float r2, bool is_active)
+Lens::Lens(float x_coordinate, float r1, float r2, bool is_active, float refractive_index)
     : x_coordinate(x_coordinate)
+    , refractive_index(refractive_index)
     , active(is_active)
 {
-    focal_length = Lens::calculateFocalLen(r1, r2);
+    focal_length = Lens::calculateFocalLen(r1, r2, refractive_index);
 }
 
 Image Lens::calculateImage(const Object &in_object) const

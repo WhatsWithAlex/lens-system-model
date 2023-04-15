@@ -11,7 +11,6 @@
 #include <iostream>
 
 extern const unsigned int max_lens_system_size;
-extern const float lens_refractive_index;
 
 enum class ObjectOrientation
 {
@@ -60,21 +59,23 @@ class Lens
 {
     float x_coordinate;
     float focal_length;
+    float refractive_index;
     bool active;
 
 public:
-    Lens(float x_coordinate = 0.0f, float focal_length = 0.0f, bool is_active = false);
-    Lens(float x_coordinate, float r1, float r2, bool is_active);
-
-    // LightRay calculateLightRay(LightRay in_ray);
+    Lens(float x_coordinate = 0.0f, float focal_length = 0.0f, bool is_active = false,
+         float refractive_index = 1.5f);
+    Lens(float x_coordinate, float r1, float r2, bool is_active = false,
+         float refractive_index = 1.5f);
 
     Image calculateImage(const Object &in_object) const;
 
     float get_x_coordinate() const;
     float get_focal_length() const;
+    float get_refractive_index() const;
     bool is_active() const;
 
-    static float calculateFocalLen(float r1, float r2);
+    static float calculateFocalLen(float r1, float r2, float refractive_index = 1.5f);
 };
 
 class LensSystemModel
