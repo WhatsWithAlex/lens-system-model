@@ -31,8 +31,6 @@ public:
     Object();
     Object(float x_coordinate, float obj_size, ObjectOrientation orientation);
 
-    // std::vector<LightRay> generateLightRays(Lens next_lens);
-
     float get_x_coordinate() const;
     float get_size() const;
     ObjectOrientation get_orientation() const;

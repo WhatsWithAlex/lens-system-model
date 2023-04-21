@@ -113,6 +113,9 @@ void LensSystemModel::calculate()
         if (current_lens.get_x_coordinate() <= object.get_x_coordinate())
             continue;
 
+        if (std::abs(current_lens.get_x_coordinate() - current_object->get_x_coordinate()) <= 1e-5f)
+            continue;
+
         current_image = current_lens.calculateImage(*current_object);
         current_object = &current_image;
     }
