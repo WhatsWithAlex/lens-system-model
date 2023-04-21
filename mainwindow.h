@@ -9,7 +9,6 @@
 #include <QGraphicsLineItem>
 #include <QList>
 #include "model.h"
-#include "graphicsarrow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

@@ -14,17 +14,17 @@ enum class ArrowType
 class GraphicsArrow : public QGraphicsLineItem
 {
 public:
-    GraphicsArrow(QPoint from, QPoint to, QColor color = Qt::black, ArrowType type = ArrowType::common);
+    GraphicsArrow(QPointF from, QPointF to, QColor color = Qt::black, ArrowType type = ArrowType::common,
+                  float arrowhead_length = 10.0f, float arrowhead_angle_degrees = 45.0f);
 
-    //    QRectF boundingRect() const override;
-    //    QPainterPath shape() const override;
+    QRectF boundingRect() const override;
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = nullptr) override;
 
 private:
-    ArrowType type;
+    QPointF arrowhead[3];
 };
 
 #endif // GRAPHICSARROW_H

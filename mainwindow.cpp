@@ -8,6 +8,7 @@
 #include "model.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "graphicsarrow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -340,8 +341,8 @@ void MainWindow::drawObject(float x, float size, ObjectOrientation orientation, 
     if (orientation == ObjectOrientation::up)
         size = -size;
 
-    QPoint from(scene_center.x() + x, scene_center.y());
-    QPoint to(scene_center.x() + x, scene_center.y() + size);
+    QPointF from(scene_center.x() + x, scene_center.y());
+    QPointF to(scene_center.x() + x, scene_center.y() + size);
     GraphicsArrow *object_arrow = new GraphicsArrow(from, to, color);
     scene_items.append(object_arrow);
     scene->addItem(object_arrow);
@@ -350,34 +351,30 @@ void MainWindow::drawObject(float x, float size, ObjectOrientation orientation, 
 void MainWindow::drawLens(int idx, float x, float focal_length)
 {
     ArrowType arrow_type;
-    QColor lens_color;
     if (focal_length < 0) {
         arrow_type = ArrowType::reversed;
-        lens_color = Qt::black;
     } else {
         arrow_type = ArrowType::common;
-        lens_color = Qt::blue;
     }
 
     QPoint from(scene_center.x() + x, scene_center.y());
 
     QPoint to1(scene_center.x() + x, scene_center.y() + 125.0f);
-    GraphicsArrow *lens_arrow1 = new GraphicsArrow(from, to1, lens_color, arrow_type);
+    GraphicsArrow *lens_arrow1 = new GraphicsArrow(from, to1, Qt::black, arrow_type);
     scene_items.append(lens_arrow1);
     scene->addItem(lens_arrow1);
 
     QPoint to2(scene_center.x() + x, scene_center.y() - 125.0f);
-    GraphicsArrow *lens_arrow2 = new GraphicsArrow(from, to2, lens_color, arrow_type);
+    GraphicsArrow *lens_arrow2 = new GraphicsArrow(from, to2, Qt::black, arrow_type);
     scene_items.append(lens_arrow2);
     scene->addItem(lens_arrow2);
 
     QGraphicsTextItem *lens_idx_text = new QGraphicsTextItem;
-    lens_idx_text->setPos(to2);
+    lens_idx_text->setPos(to2 + QPointF(0.0f, -30.0f));
     lens_idx_text->setPlainText(QString::number(idx + 1));
+    lens_idx_text->setFont(QFont("Times", 14, QFont::Bold));
     scene_items.append(lens_idx_text);
     scene->addItem(lens_idx_text);
-
-//    scene->addEllipse()
 }
 
 void MainWindow::drawScene()
